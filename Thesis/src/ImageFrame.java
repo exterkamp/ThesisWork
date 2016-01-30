@@ -33,6 +33,7 @@ public class ImageFrame extends JFrame {
 	
 	private final JFileChooser chooser;
 	private BufferedImage image = null;
+	private QuadTreePartition partition = null;
 	
 
 	/**
@@ -99,7 +100,16 @@ public class ImageFrame extends JFrame {
 		
 		biItem.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
-							
+				if (image != null){
+					partition = new QuadTreePartition(image);
+					partition.partition();
+					displayBufferedImage(QuadTreePartition.getImage());
+					
+					
+				}
+				
+				
+				
 			}		
 		});
 		
@@ -141,7 +151,7 @@ public class ImageFrame extends JFrame {
 	}
 	
 	public void displayBufferedImage(BufferedImage image){
-	
+		this.image = image;
 		this.setContentPane(new JScrollPane (new JLabel(new ImageIcon(image))));	
 		this.validate();	
 	}
