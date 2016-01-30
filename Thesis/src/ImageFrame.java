@@ -18,12 +18,20 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
+
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+
 import javax.swing.JButton;
 import javax.swing.JSplitPane;
 import javax.swing.JLayeredPane;
 import javax.swing.BoxLayout;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Component;
 
 
@@ -40,6 +48,11 @@ public class ImageFrame extends JFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		//OpenCV starter stuff
+		configureOpenCV();
+		
+		
+		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -96,15 +109,32 @@ public class ImageFrame extends JFrame {
 		});
 		
 		JMenu imageMenu = new JMenu("Image");	
-		JMenuItem biItem = new JMenuItem("Bilinear");
+		JMenuItem qItem = new JMenuItem("QuadTree");
 		
-		biItem.addActionListener(new ActionListener(){
+		qItem.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent event){
 				if (image != null){
 					partition = new QuadTreePartition(image);
 					partition.partition();
 					displayBufferedImage(QuadTreePartition.getImage());
 					
+					
+				}
+				
+				
+				
+			}		
+		});
+		
+		imageMenu.add(qItem);
+		
+		JMenuItem biItem = new JMenuItem("Bilinear Blur 75%");
+		
+		biItem.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				if (image != null){
+					image = scaleDown50(image);
+					displayBufferedImage(image);
 					
 				}
 				
@@ -154,6 +184,48 @@ public class ImageFrame extends JFrame {
 		this.image = image;
 		this.setContentPane(new JScrollPane (new JLabel(new ImageIcon(image))));	
 		this.validate();	
+	}
+	
+	private static void configureOpenCV(){
+		System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
+	    //Mat mat = Mat.eye( 3, 3, CvType.CV_8UC1 );
+	    //System.out.println( "mat = " + mat.dump() );
+	}
+	
+	private BufferedImage scaleDown50(BufferedImage input){
+		int width = input.getWidth()/4;
+		int height =  input.getHeight()/4;
+		BufferedImage newImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
+	    Graphics2D g = newImage.createGraphics();
+	    try {
+	        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+	                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+	        g.setBackground(Color.WHITE);
+	        g.clearRect(0, 0, width, height);
+	        g.drawImage(input, 0, 0, width, height, null);
+	    } finally {
+	        g.dispose();
+	    }
+		
+		
+		return scaleUp50(newImage);
+	}
+	
+	private BufferedImage scaleUp50(BufferedImage input){
+		int width = input.getWidth()*4;
+		int height =  input.getHeight()*4;
+		BufferedImage newImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
+	    Graphics2D g = newImage.createGraphics();
+	    try {
+	        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+	                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+	        g.setBackground(Color.WHITE);
+	        g.clearRect(0, 0, width, height);
+	        g.drawImage(input, 0, 0, width, height, null);
+	    } finally {
+	        g.dispose();
+	    }
+	    return newImage;
 	}
 
 }

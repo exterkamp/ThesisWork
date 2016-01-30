@@ -3,19 +3,24 @@ import java.awt.image.BufferedImage;
 public class Comparator {
 	
 	static public final int ORANGE_AND_BLUE = 0;
+	static public final int DB_IMAGE_COMPARISON = 1;
 	
 	
 	static public boolean compare(BufferedImage input, int algorithm){
 		switch(algorithm){
 			case ORANGE_AND_BLUE:
 				return findOrangeAndBlue(input);
-			default:
+		case DB_IMAGE_COMPARISON:
+				return matchWithDBImages(input);
+		default:
 				System.out.println("choice not found :(");
 				return false;
 		}
 	}
 	
-	
+	static public boolean matchWithDBImages(BufferedImage input){
+		return false;
+	}
 	
 	static public boolean findOrangeAndBlue(BufferedImage input){
 		
