@@ -3,6 +3,7 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.IOException;
 
@@ -22,11 +23,17 @@ import javax.swing.border.EmptyBorder;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfKeyPoint;
+import org.opencv.features2d.DescriptorExtractor;
+import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.Features2d;
+import org.opencv.imgproc.Imgproc;
 
 import javax.swing.JButton;
 import javax.swing.JSplitPane;
 import javax.swing.JLayeredPane;
 import javax.swing.BoxLayout;
+
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -145,6 +152,22 @@ public class ImageFrame extends JFrame {
 		
 		imageMenu.add(biItem);
 		
+		JMenuItem keyItem = new JMenuItem("Keypoint Looker");
+		
+		keyItem.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				if (image != null){
+					image = keypointFinder(image);
+					displayBufferedImage(image);
+				}
+				
+				
+				
+			}		
+		});
+		
+		imageMenu.add(keyItem);
+		
 		fileMenu.add(exitItem);		
 		JMenuBar menuBar = new JMenuBar();		
 		menuBar.add(fileMenu);	
@@ -181,7 +204,8 @@ public class ImageFrame extends JFrame {
 	}
 	
 	public void displayBufferedImage(BufferedImage image){
-		this.image = image;
+		this.image = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+		this.image.getGraphics().drawImage(image,0,0,null);
 		this.setContentPane(new JScrollPane (new JLabel(new ImageIcon(image))));	
 		this.validate();	
 	}
@@ -226,6 +250,46 @@ public class ImageFrame extends JFrame {
 	        g.dispose();
 	    }
 	    return newImage;
+	}
+	
+	private BufferedImage keypointFinder(BufferedImage input){
+		
+		int minHessian = 400;
+		FeatureDetector dect = FeatureDetector.create(FeatureDetector.SURF);
+		byte[] px = ((DataBufferByte) input.getRaster().getDataBuffer()).getData();
+		Mat mat = new Mat(input.getHeight(),input.getWidth(),CvType.CV_8UC3);
+		mat.put(0, 0, px);
+		
+		Imgproc.cvtColor(mat,mat,Imgproc.COLOR_RGB2GRAY);
+		
+		MatOfKeyPoint keypoints_1 = new MatOfKeyPoint();
+		
+		dect.detect(mat, keypoints_1);
+		
+		Features2d.drawKeypoints(mat, keypoints_1, mat);
+		
+		DescriptorExtractor desc =DescriptorExtractor.create(DescriptorExtractor.SURF);//SURF = 2
+		
+		Mat descriptors = new Mat();
+		
+		desc.compute(mat,keypoints_1, descriptors);
+		
+		int type;
+		
+		if(mat.channels() == 1)
+            type = BufferedImage.TYPE_BYTE_GRAY;
+        else
+            type = BufferedImage.TYPE_3BYTE_BGR;
+		
+		byte[] data = new byte[input.getWidth() * input.getHeight() * (int)mat.elemSize()];
+		mat.get(0, 0, data);
+		
+        BufferedImage newImg = new BufferedImage(input.getWidth(), input.getHeight(), type);
+
+        newImg.getRaster().setDataElements(0, 0, input.getWidth(), input.getHeight(), data);
+        
+        return newImg;
+		
 	}
 
 }

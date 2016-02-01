@@ -1,4 +1,13 @@
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfKeyPoint;
+import org.opencv.features2d.DescriptorExtractor;
+import org.opencv.features2d.DescriptorMatcher;
+import org.opencv.features2d.FeatureDetector;
+import org.opencv.imgproc.Imgproc;
 
 public class Comparator {
 	
@@ -19,6 +28,13 @@ public class Comparator {
 	}
 	
 	static public boolean matchWithDBImages(BufferedImage input){
+		return false;
+	}
+	
+	static public boolean detectKeypoints(BufferedImage input){
+		
+		
+		
 		return false;
 	}
 	
