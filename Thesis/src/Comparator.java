@@ -13,6 +13,7 @@ import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.Features2d;
+import org.opencv.features2d.KeyPoint;
 import org.opencv.imgproc.Imgproc;
 
 public class Comparator {
@@ -44,8 +45,6 @@ public class Comparator {
 	static public boolBuff detectKeypoints(BufferedImage input){
 		Random rand = new Random();
 		
-		if (rand.nextFloat() > 0.75){
-			
 		int minHessian = 400;
 		
 		byte[] px = ((DataBufferByte) input.getRaster().getDataBuffer()).getData();
@@ -58,31 +57,32 @@ public class Comparator {
 		
 		dect.detect(mat, keypoints_1);
 		
-		Features2d.drawKeypoints(mat, keypoints_1, mat);
+		KeyPoint[] keys = keypoints_1.toArray();
 		
+		if (keys.length > 0 && keys.length <= 10){
 		
-		
-		Mat descriptors = new Mat();
-		
-		desc.compute(mat,keypoints_1, descriptors);
-		
-		int type;
-		
-		if(mat.channels() == 1)
-            type = BufferedImage.TYPE_BYTE_GRAY;
-        else
-            type = BufferedImage.TYPE_3BYTE_BGR;
-		
-		byte[] data = new byte[input.getWidth() * input.getHeight() * (int)mat.elemSize()];
-		mat.get(0, 0, data);
-		
-        BufferedImage newImg = new BufferedImage(input.getWidth(), input.getHeight(), type);
-
-        newImg.getRaster().setDataElements(0, 0, input.getWidth(), input.getHeight(), data);
-		
-        
-        //input = newImg;
-        System.out.println("return with new image");
+			Features2d.drawKeypoints(mat, keypoints_1, mat);
+			
+			Mat descriptors = new Mat();
+			
+			desc.compute(mat,keypoints_1, descriptors);
+			
+			int type;
+			
+			if(mat.channels() == 1)
+	            type = BufferedImage.TYPE_BYTE_GRAY;
+	        else
+	            type = BufferedImage.TYPE_3BYTE_BGR;
+			
+			byte[] data = new byte[input.getWidth() * input.getHeight() * (int)mat.elemSize()];
+			mat.get(0, 0, data);
+			
+	        BufferedImage newImg = new BufferedImage(input.getWidth(), input.getHeight(), type);
+	
+	        newImg.getRaster().setDataElements(0, 0, input.getWidth(), input.getHeight(), data);
+			
+	        //input = newImg;
+	        System.out.println("return with new image");
         	return new boolBuff(true, newImg);
 		}else{
 			return new boolBuff(false);
