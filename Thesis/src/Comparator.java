@@ -1,5 +1,10 @@
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.File;
+import java.io.IOException;
+import java.util.Random;
+
+import javax.imageio.ImageIO;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -7,38 +12,84 @@ import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 
 public class Comparator {
 	
 	static public final int ORANGE_AND_BLUE = 0;
 	static public final int DB_IMAGE_COMPARISON = 1;
+	static public final int KEYPOINT_DETECT = 2;
+	static FeatureDetector dect = FeatureDetector.create(FeatureDetector.SURF);
+	static DescriptorExtractor desc =DescriptorExtractor.create(DescriptorExtractor.SURF);//SURF = 2
 	
-	
-	static public boolean compare(BufferedImage input, int algorithm){
+	static public boolBuff compare(BufferedImage input, int algorithm){
 		switch(algorithm){
 			case ORANGE_AND_BLUE:
 				return findOrangeAndBlue(input);
 		case DB_IMAGE_COMPARISON:
 				return matchWithDBImages(input);
+		case KEYPOINT_DETECT:
+				return detectKeypoints(input);
 		default:
 				System.out.println("choice not found :(");
-				return false;
+				return new boolBuff(false);
 		}
 	}
 	
-	static public boolean matchWithDBImages(BufferedImage input){
-		return false;
+	static public boolBuff matchWithDBImages(BufferedImage input){
+		return new boolBuff(false);
 	}
 	
-	static public boolean detectKeypoints(BufferedImage input){
+	static public boolBuff detectKeypoints(BufferedImage input){
+		Random rand = new Random();
+		
+		if (rand.nextFloat() > 0.75){
+			
+		int minHessian = 400;
+		
+		byte[] px = ((DataBufferByte) input.getRaster().getDataBuffer()).getData();
+		Mat mat = new Mat(input.getHeight(),input.getWidth(),CvType.CV_8UC3);
+		mat.put(0, 0, px);
+		
+		Imgproc.cvtColor(mat,mat,Imgproc.COLOR_RGB2GRAY);
+		
+		MatOfKeyPoint keypoints_1 = new MatOfKeyPoint();
+		
+		dect.detect(mat, keypoints_1);
+		
+		Features2d.drawKeypoints(mat, keypoints_1, mat);
 		
 		
 		
-		return false;
+		Mat descriptors = new Mat();
+		
+		desc.compute(mat,keypoints_1, descriptors);
+		
+		int type;
+		
+		if(mat.channels() == 1)
+            type = BufferedImage.TYPE_BYTE_GRAY;
+        else
+            type = BufferedImage.TYPE_3BYTE_BGR;
+		
+		byte[] data = new byte[input.getWidth() * input.getHeight() * (int)mat.elemSize()];
+		mat.get(0, 0, data);
+		
+        BufferedImage newImg = new BufferedImage(input.getWidth(), input.getHeight(), type);
+
+        newImg.getRaster().setDataElements(0, 0, input.getWidth(), input.getHeight(), data);
+		
+        
+        //input = newImg;
+        System.out.println("return with new image");
+        	return new boolBuff(true, newImg);
+		}else{
+			return new boolBuff(false);
+		}
 	}
 	
-	static public boolean findOrangeAndBlue(BufferedImage input){
+	static public boolBuff findOrangeAndBlue(BufferedImage input){
 		
 		int averageR = 0;
 		int averageG = 0;
@@ -69,12 +120,11 @@ public class Comparator {
 			
 			//System.out.println("R: " + averageR + " G: " + averageG + " B: " + averageB);
 			
-			return true;
+			return new boolBuff(true);
 		}
 		
-		return false;
+		return new boolBuff(false);
 		
 	}
 	
-
 }
