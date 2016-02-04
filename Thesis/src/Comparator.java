@@ -1,19 +1,26 @@
+import java.util.List;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
 
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.features2d.Features2d;
 import org.opencv.features2d.KeyPoint;
+import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
 public class Comparator {
@@ -21,6 +28,8 @@ public class Comparator {
 	static public final int ORANGE_AND_BLUE = 0;
 	static public final int DB_IMAGE_COMPARISON = 1;
 	static public final int KEYPOINT_DETECT = 2;
+	static public final int BACK_PROJECTION = 3;
+	
 	static FeatureDetector dect = FeatureDetector.create(FeatureDetector.SURF);
 	static DescriptorExtractor desc =DescriptorExtractor.create(DescriptorExtractor.SURF);//SURF = 2
 	
@@ -32,6 +41,8 @@ public class Comparator {
 				return matchWithDBImages(input);
 		case KEYPOINT_DETECT:
 				return detectKeypoints(input);
+		case BACK_PROJECTION:
+				return back_proj(input);
 		default:
 				System.out.println("choice not found :(");
 				return new boolBuff(false);
@@ -40,6 +51,62 @@ public class Comparator {
 	
 	static public boolBuff matchWithDBImages(BufferedImage input){
 		return new boolBuff(false);
+	}
+	
+	static public boolBuff back_proj(BufferedImage input){
+		
+		Mat ref = Highgui.imread("ref_petal.jpg");
+		
+		//Imgproc.cvtColor(ref,ref,Imgproc.COLOR_RGB2GRAY);
+		Imgproc.cvtColor(ref,ref,Imgproc.COLOR_BGR2HSV);
+		
+		byte[] px = ((DataBufferByte) input.getRaster().getDataBuffer()).getData();
+		Mat mHsv = new Mat(input.getHeight(),input.getWidth(),CvType.CV_8UC3);
+		mHsv.put(0, 0, px);
+		
+		Imgproc.cvtColor(mHsv,mHsv,Imgproc.COLOR_BGR2HSV);
+		
+		List<Mat> matList = new ArrayList<Mat>();
+		matList.add(ref);
+		
+		Mat hist = new Mat();
+		int h_bins = 30;
+		int s_bins = 32;
+		
+		MatOfInt mHistSize = new MatOfInt(h_bins,s_bins);
+		
+		MatOfFloat mRanges = new MatOfFloat(0,179,0,255);
+		MatOfInt mChannels = new MatOfInt(0,1);
+		
+		
+		
+		
+		
+		
+		boolean acc = false;
+		
+		Imgproc.calcHist(matList, mChannels, new Mat(), hist, mHistSize, mRanges);
+		
+		Core.normalize(hist, hist, 0, 255, Core.NORM_MINMAX, -1, new Mat());
+		
+		Mat backproj = new Mat();
+	    Imgproc.calcBackProject(Arrays.asList(mHsv), mChannels, hist, backproj, mRanges, 1);
+	    
+	    int type;
+		
+		if(backproj.channels() == 1)
+            type = BufferedImage.TYPE_BYTE_GRAY;
+        else
+            type = BufferedImage.TYPE_3BYTE_BGR;
+		
+		byte[] data = new byte[input.getWidth() * input.getHeight() * (int)backproj.elemSize()];
+		backproj.get(0, 0, data);
+	    
+	    BufferedImage newImg = new BufferedImage(input.getWidth(), input.getHeight(), type);
+		
+        newImg.getRaster().setDataElements(0, 0, input.getWidth(), input.getHeight(), data);
+	    
+	    return new boolBuff(true, newImg);
 	}
 	
 	static public boolBuff detectKeypoints(BufferedImage input){
@@ -59,7 +126,7 @@ public class Comparator {
 		
 		KeyPoint[] keys = keypoints_1.toArray();
 		
-		if (keys.length > 0 && keys.length <= 10){
+		if (keys.length < 2){// && keys.length <= 10){
 		
 			Features2d.drawKeypoints(mat, keypoints_1, mat);
 			

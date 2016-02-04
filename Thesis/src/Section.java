@@ -58,7 +58,7 @@ public class Section {
 				(topLeft.y - bottomRight.y) > MINIMUM_WIDTH_OR_HEIGHT){
 			//run comparison operations!
 			
-			boolBuff bool = Comparator.compare(image, Comparator.KEYPOINT_DETECT);
+			boolBuff bool = Comparator.compare(image, Comparator.BACK_PROJECTION);
 			
 			boolean found = bool.returnBool();
 			
