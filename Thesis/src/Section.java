@@ -9,7 +9,7 @@ import javax.imageio.ImageIO;
 
 public class Section {
 	
-	static private int MINIMUM_WIDTH_OR_HEIGHT = 8;//in pixels
+	static private int MINIMUM_WIDTH_OR_HEIGHT = 4;//in pixels
 	
 	private Point topLeft;
 	private Point bottomRight;

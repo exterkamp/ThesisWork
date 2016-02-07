@@ -15,6 +15,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.Scalar;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
@@ -70,8 +71,8 @@ public class Comparator {
 		matList.add(ref);
 		
 		Mat hist = new Mat();
-		int h_bins = 30;
-		int s_bins = 32;
+		int h_bins = 25;
+		int s_bins = 25;
 		
 		MatOfInt mHistSize = new MatOfInt(h_bins,s_bins);
 		
@@ -101,12 +102,40 @@ public class Comparator {
 		
 		byte[] data = new byte[input.getWidth() * input.getHeight() * (int)backproj.elemSize()];
 		backproj.get(0, 0, data);
-	    
+
 	    BufferedImage newImg = new BufferedImage(input.getWidth(), input.getHeight(), type);
 		
         newImg.getRaster().setDataElements(0, 0, input.getWidth(), input.getHeight(), data);
 	    
-	    return new boolBuff(true, newImg);
+        int avgB = 0;
+        int avgG = 0;
+        int avgR = 0;
+        
+        for(int i = 0; i < newImg.getHeight(); i++)
+	    {
+	        for(int j = 0; j < newImg.getWidth(); j++)
+	        {
+	        	int color = newImg.getRGB(j, i);
+	        	avgB += color & 0xff;
+	        	avgG += (color & 0xff00) >> 8;
+	        	avgR += (color & 0xff0000) >> 16;
+	        	
+	            // do something with BGR values...
+	        }
+	    }
+        
+        int denom = newImg.getHeight() * newImg.getWidth();
+        avgB /= denom;
+        avgG /= denom;
+        avgR /= denom;
+        
+        int val = 75;
+        
+        if (avgB > val || avgG > val || avgR > val){
+        	return new boolBuff(true, newImg);
+        }
+        
+	    return new boolBuff(false);
 	}
 	
 	static public boolBuff detectKeypoints(BufferedImage input){
