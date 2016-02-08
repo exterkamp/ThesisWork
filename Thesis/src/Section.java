@@ -108,7 +108,7 @@ public class Section {
 					BufferedImage master = QuadTreePartition.getImage();
 					
 					Graphics2D g2d = master.createGraphics();
-					System.out.println("setting new image");
+					//System.out.println("setting new image");
 					g2d.drawImage(image, topLeft.x, master.getHeight() - topLeft.y, null);
 				}
 				colorSection(Color.RED);

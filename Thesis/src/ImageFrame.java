@@ -217,8 +217,8 @@ public class ImageFrame extends JFrame {
 	}
 	
 	private BufferedImage scaleDown50(BufferedImage input){
-		int width = input.getWidth()/4;
-		int height =  input.getHeight()/4;
+		int width = input.getWidth()/2;
+		int height =  input.getHeight()/2;
 		BufferedImage newImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
 	    Graphics2D g = newImage.createGraphics();
 	    try {
@@ -236,8 +236,8 @@ public class ImageFrame extends JFrame {
 	}
 	
 	private BufferedImage scaleUp50(BufferedImage input){
-		int width = input.getWidth()*4;
-		int height =  input.getHeight()*4;
+		int width = input.getWidth()*2;
+		int height =  input.getHeight()*2;
 		BufferedImage newImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
 	    Graphics2D g = newImage.createGraphics();
 	    try {

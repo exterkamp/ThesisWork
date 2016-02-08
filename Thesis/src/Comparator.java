@@ -56,7 +56,7 @@ public class Comparator {
 	
 	static public boolBuff back_proj(BufferedImage input){
 		
-		Mat ref = Highgui.imread("ref_petal.jpg");
+		Mat ref = Highgui.imread("flower_2.jpg");
 		
 		//Imgproc.cvtColor(ref,ref,Imgproc.COLOR_RGB2GRAY);
 		Imgproc.cvtColor(ref,ref,Imgproc.COLOR_BGR2HSV);
@@ -71,12 +71,12 @@ public class Comparator {
 		matList.add(ref);
 		
 		Mat hist = new Mat();
-		int h_bins = 25;
-		int s_bins = 25;
+		int h_bins = 30;
+		int s_bins = 32;
 		
 		MatOfInt mHistSize = new MatOfInt(h_bins,s_bins);
 		
-		MatOfFloat mRanges = new MatOfFloat(0,179,0,255);
+		MatOfFloat mRanges = new MatOfFloat(0,255,0,255);
 		MatOfInt mChannels = new MatOfInt(0,1);
 		
 		
@@ -107,6 +107,8 @@ public class Comparator {
 		
         newImg.getRaster().setDataElements(0, 0, input.getWidth(), input.getHeight(), data);
 	    
+        //return new boolBuff(true, newImg);
+        
         int avgB = 0;
         int avgG = 0;
         int avgR = 0;
@@ -129,9 +131,10 @@ public class Comparator {
         avgG /= denom;
         avgR /= denom;
         
-        int val = 75;
+        int val = 128;
         
         if (avgB > val || avgG > val || avgR > val){
+        	//System.out.println(avgR + "," + avgG + "," + avgB);
         	return new boolBuff(true, newImg);
         }
         
