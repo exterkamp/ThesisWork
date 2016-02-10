@@ -168,6 +168,22 @@ public class ImageFrame extends JFrame {
 		
 		imageMenu.add(keyItem);
 		
+		JMenuItem MSEItem = new JMenuItem("MSE looker");
+		
+		MSEItem.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				if (image != null){
+					image = mseMatch(image);
+					displayBufferedImage(image);
+				}
+				//System.out.println("click");
+				
+				
+			}		
+		});
+		
+		imageMenu.add(MSEItem);
+		
 		fileMenu.add(exitItem);		
 		JMenuBar menuBar = new JMenuBar();		
 		menuBar.add(fileMenu);	
@@ -292,4 +308,66 @@ public class ImageFrame extends JFrame {
 		
 	}
 
+	private BufferedImage mseMatch(BufferedImage input){
+		//System.out.println("mse matching");
+		BufferedImage refImg = null;
+		try {
+		    refImg = ImageIO.read(new File("ref_8_by_8.jpg"));
+		} catch (IOException e) {
+		}
+		//BufferedImage scaledImg = new BufferedImage(input.getWidth(),input.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		//Graphics2D g2d = refImg.createGraphics();
+		//g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		//g2d.drawImage(refImg,0,0,input.getWidth(),input.getHeight(),null);
+		//g2d.dispose();
+		double LowestMSE = 1000000000;
+		
+		int sum_sq = 0;
+		double mse;
+		
+		Graphics2D g2d = (Graphics2D) image.getGraphics();
+		g2d.setColor(Color.RED);
+		
+		//System.out.print("scaled ref: " + scaledImg.getHeight() + " , " + scaledImg.getWidth());
+		//System.out.println(" inputs: " + input.getHeight() + " , " + input.getWidth());
+		
+		int width = refImg.getWidth();
+		int height = refImg.getHeight();
+		
+		for (int outerX = 0;outerX < input.getWidth();outerX += width){
+			//System.out.print("outer x: " + outerX);
+			for (int outerY = 0;outerY < input.getHeight();outerY += height){
+				//System.out.print(" outer y: " + outerY);
+				for (int i = 0; i < height; i++)
+				{	
+					//System.out.print(" inner y: " + i);
+				    for (int j = 0; j < width; j++)
+				    {
+				    	//System.out.print(" inner x: " + j);
+				        int p1 = refImg.getRGB(j, i);
+				        int p2 = input.getRGB(outerX + j, outerY + i);
+				        int err = p2 - p1;
+				        sum_sq += (err * err);
+				    }
+				}
+				mse = (double)sum_sq / (input.getHeight() * input.getWidth());
+				
+				if (mse < 0){
+					mse *= -1;
+				}
+				
+				if (mse < 50){
+					LowestMSE = mse;
+					int imageUpperLeftY = input.getHeight() - outerY;
+					g2d.drawRect(outerX, imageUpperLeftY, width, height);
+					System.out.println(outerX + " , " + outerY + "/" + imageUpperLeftY + " " + mse);
+					//return new boolBuff(false,scaledImg);
+				}
+			}
+		}
+		
+		return image;
+		//return new boolBuff(false);
+	}
+	
 }
