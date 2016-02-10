@@ -58,7 +58,7 @@ public class Section {
 				(topLeft.y - bottomRight.y) > MINIMUM_WIDTH_OR_HEIGHT){
 			//run comparison operations!
 			
-			boolBuff bool = Comparator.compare(image, Comparator.BACK_PROJECTION);
+			boolBuff bool = Comparator.compare(image, Comparator.MSE_MATCH);
 			
 			boolean found = bool.returnBool();
 			
@@ -66,6 +66,11 @@ public class Section {
 			if (!found){
 				//no pattern found, keep searching
 				leaf = false;
+				
+				if (bool.returnImage() != null){
+					colorSection(Color.RED);
+				}
+				
 				//middle
 				Point middle = new Point((bottomRight.x - topLeft.x)/2 + topLeft.x,(topLeft.y - bottomRight.y)/2 + bottomRight.y);
 				
@@ -113,6 +118,7 @@ public class Section {
 					colorSection(Color.BLUE);
 				}else{
 					colorSection(Color.RED);
+					//return false;
 				}
 				
 				

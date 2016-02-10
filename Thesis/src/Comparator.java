@@ -1,4 +1,6 @@
 import java.util.List;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
@@ -30,6 +32,8 @@ public class Comparator {
 	static public final int DB_IMAGE_COMPARISON = 1;
 	static public final int KEYPOINT_DETECT = 2;
 	static public final int BACK_PROJECTION = 3;
+	static public final int MSE_MATCH = 4;
+	static public double LowestMSE = 1000000;
 	
 	static FeatureDetector dect = FeatureDetector.create(FeatureDetector.SURF);
 	static DescriptorExtractor desc =DescriptorExtractor.create(DescriptorExtractor.SURF);//SURF = 2
@@ -44,6 +48,8 @@ public class Comparator {
 				return detectKeypoints(input);
 		case BACK_PROJECTION:
 				return back_proj(input);
+		case MSE_MATCH:
+				return mseMatch(input);
 		default:
 				System.out.println("choice not found :(");
 				return new boolBuff(false);
@@ -53,6 +59,51 @@ public class Comparator {
 	static public boolBuff matchWithDBImages(BufferedImage input){
 		return new boolBuff(false);
 	}
+	
+	static public boolBuff mseMatch(BufferedImage input){
+		BufferedImage refImg = null;
+		try {
+		    refImg = ImageIO.read(new File("ref_8_by_8.jpg"));
+		} catch (IOException e) {
+		}
+		BufferedImage scaledImg = new BufferedImage(input.getWidth(),input.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = refImg.createGraphics();
+		g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g2d.drawImage(refImg,0,0,input.getWidth(),input.getHeight(),null);
+		g2d.dispose();
+		
+		int sum_sq = 0;
+		double mse;
+		
+		//System.out.print("scaled ref: " + scaledImg.getHeight() + " , " + scaledImg.getWidth());
+		//System.out.println(" inputs: " + input.getHeight() + " , " + input.getWidth());
+		
+		for (int i = 0; i < input.getHeight(); i++)
+		{
+		    for (int j = 0; j < input.getWidth(); j++)
+		    {
+		        int p1 = scaledImg.getRGB(j, i);
+		        int p2 = input.getRGB(j, i);
+		        int err = p2 - p1;
+		        sum_sq += (err * err);
+		    }
+		}
+		mse = (double)sum_sq / (input.getHeight() * input.getWidth());
+		
+		if (mse < 0){
+			mse *= -1;
+		}
+		
+		if (mse < LowestMSE){
+			LowestMSE = mse;
+			System.out.println(mse);
+			return new boolBuff(false,scaledImg);
+		}
+		
+		return new boolBuff(false);
+	}
+	
+	
 	
 	static public boolBuff back_proj(BufferedImage input){
 		
@@ -135,7 +186,7 @@ public class Comparator {
 	        avgR /= denom;
 	        
 	        int val = 128;
-	        int valo = 10;
+	        int valo = 5;
 	        if (avgB > val || avgG > val || avgR > val){
 	        	//System.out.println(avgR + "," + avgG + "," + avgB);
 	        	return new boolBuff(true, newImg);
