@@ -56,88 +56,95 @@ public class Comparator {
 	
 	static public boolBuff back_proj(BufferedImage input){
 		
-		Mat ref = Highgui.imread("flower_2.jpg");
+		String[] refs = {"flower_2.jpg","flower.jpg","ref_petal.jpg"};
 		
-		//Imgproc.cvtColor(ref,ref,Imgproc.COLOR_RGB2GRAY);
-		Imgproc.cvtColor(ref,ref,Imgproc.COLOR_BGR2HSV);
-		
-		byte[] px = ((DataBufferByte) input.getRaster().getDataBuffer()).getData();
-		Mat mHsv = new Mat(input.getHeight(),input.getWidth(),CvType.CV_8UC3);
-		mHsv.put(0, 0, px);
-		
-		Imgproc.cvtColor(mHsv,mHsv,Imgproc.COLOR_BGR2HSV);
-		
-		List<Mat> matList = new ArrayList<Mat>();
-		matList.add(ref);
-		
-		Mat hist = new Mat();
-		int h_bins = 30;
-		int s_bins = 32;
-		
-		MatOfInt mHistSize = new MatOfInt(h_bins,s_bins);
-		
-		MatOfFloat mRanges = new MatOfFloat(0,255,0,255);
-		MatOfInt mChannels = new MatOfInt(0,1);
-		
-		
-		
-		
-		
-		
-		boolean acc = false;
-		
-		Imgproc.calcHist(matList, mChannels, new Mat(), hist, mHistSize, mRanges);
-		
-		Core.normalize(hist, hist, 0, 255, Core.NORM_MINMAX, -1, new Mat());
-		
-		Mat backproj = new Mat();
-	    Imgproc.calcBackProject(Arrays.asList(mHsv), mChannels, hist, backproj, mRanges, 1);
-	    
-	    int type;
-		
-		if(backproj.channels() == 1)
-            type = BufferedImage.TYPE_BYTE_GRAY;
-        else
-            type = BufferedImage.TYPE_3BYTE_BGR;
-		
-		byte[] data = new byte[input.getWidth() * input.getHeight() * (int)backproj.elemSize()];
-		backproj.get(0, 0, data);
-
-	    BufferedImage newImg = new BufferedImage(input.getWidth(), input.getHeight(), type);
-		
-        newImg.getRaster().setDataElements(0, 0, input.getWidth(), input.getHeight(), data);
-	    
-        //return new boolBuff(true, newImg);
-        
-        int avgB = 0;
-        int avgG = 0;
-        int avgR = 0;
-        
-        for(int i = 0; i < newImg.getHeight(); i++)
-	    {
-	        for(int j = 0; j < newImg.getWidth(); j++)
-	        {
-	        	int color = newImg.getRGB(j, i);
-	        	avgB += color & 0xff;
-	        	avgG += (color & 0xff00) >> 8;
-	        	avgR += (color & 0xff0000) >> 16;
-	        	
-	            // do something with BGR values...
+		for (String image: refs){
+			Mat ref = Highgui.imread(image);
+			
+			//Imgproc.cvtColor(ref,ref,Imgproc.COLOR_RGB2GRAY);
+			Imgproc.cvtColor(ref,ref,Imgproc.COLOR_BGR2HSV);
+			
+			byte[] px = ((DataBufferByte) input.getRaster().getDataBuffer()).getData();
+			Mat mHsv = new Mat(input.getHeight(),input.getWidth(),CvType.CV_8UC3);
+			mHsv.put(0, 0, px);
+			
+			Imgproc.cvtColor(mHsv,mHsv,Imgproc.COLOR_BGR2HSV);
+			
+			List<Mat> matList = new ArrayList<Mat>();
+			matList.add(ref);
+			
+			Mat hist = new Mat();
+			int h_bins = 30;
+			int s_bins = 32;
+			
+			MatOfInt mHistSize = new MatOfInt(h_bins,s_bins);
+			
+			MatOfFloat mRanges = new MatOfFloat(0,255,0,255);
+			MatOfInt mChannels = new MatOfInt(0,1);
+			
+			
+			
+			
+			
+			
+			boolean acc = false;
+			
+			Imgproc.calcHist(matList, mChannels, new Mat(), hist, mHistSize, mRanges);
+			
+			Core.normalize(hist, hist, 0, 255, Core.NORM_MINMAX, -1, new Mat());
+			
+			Mat backproj = new Mat();
+		    Imgproc.calcBackProject(Arrays.asList(mHsv), mChannels, hist, backproj, mRanges, 1);
+		    
+		    int type;
+			
+			if(backproj.channels() == 1)
+	            type = BufferedImage.TYPE_BYTE_GRAY;
+	        else
+	            type = BufferedImage.TYPE_3BYTE_BGR;
+			
+			byte[] data = new byte[input.getWidth() * input.getHeight() * (int)backproj.elemSize()];
+			backproj.get(0, 0, data);
+	
+		    BufferedImage newImg = new BufferedImage(input.getWidth(), input.getHeight(), type);
+			
+	        newImg.getRaster().setDataElements(0, 0, input.getWidth(), input.getHeight(), data);
+		    
+	        //return new boolBuff(true, newImg);
+	        
+	        int avgB = 0;
+	        int avgG = 0;
+	        int avgR = 0;
+	        
+	        for(int i = 0; i < newImg.getHeight(); i++)
+		    {
+		        for(int j = 0; j < newImg.getWidth(); j++)
+		        {
+		        	int color = newImg.getRGB(j, i);
+		        	avgB += color & 0xff;
+		        	avgG += (color & 0xff00) >> 8;
+		        	avgR += (color & 0xff0000) >> 16;
+		        	
+		            // do something with BGR values...
+		        }
+		    }
+	        
+	        int denom = newImg.getHeight() * newImg.getWidth();
+	        avgB /= denom;
+	        avgG /= denom;
+	        avgR /= denom;
+	        
+	        int val = 128;
+	        int valo = 10;
+	        if (avgB > val || avgG > val || avgR > val){
+	        	//System.out.println(avgR + "," + avgG + "," + avgB);
+	        	return new boolBuff(true, newImg);
+	        }else if(avgB < valo || avgG < valo || avgR < valo) {
+	        	return new boolBuff(true,null);
 	        }
-	    }
-        
-        int denom = newImg.getHeight() * newImg.getWidth();
-        avgB /= denom;
-        avgG /= denom;
-        avgR /= denom;
-        
-        int val = 128;
-        
-        if (avgB > val || avgG > val || avgR > val){
-        	//System.out.println(avgR + "," + avgG + "," + avgB);
-        	return new boolBuff(true, newImg);
-        }
-        
+	        
+	        
+		}
 	    return new boolBuff(false);
 	}
 	

@@ -90,7 +90,7 @@ public class Section {
 				SouthEast = new Section(middle,bottomRight,split(middle,bottomRight));
 				
 				SouthEast.populateChildren();
-				colorSection(Color.BLUE);
+				//colorSection(Color.BLUE);
 				return true;
 			}else{
 				//found a pattern!
@@ -110,15 +110,18 @@ public class Section {
 					Graphics2D g2d = master.createGraphics();
 					//System.out.println("setting new image");
 					g2d.drawImage(image, topLeft.x, master.getHeight() - topLeft.y, null);
+					colorSection(Color.BLUE);
+				}else{
+					colorSection(Color.RED);
 				}
-				colorSection(Color.RED);
+				
 				
 				
 				return true;
 			}
 		}else{
 			//System.out.println("Leaf @: " + topLeft.x + " , " + topLeft.y + " : " + bottomRight.x + " , " + bottomRight.y);
-			colorSection(Color.BLACK);
+			//colorSection(Color.BLACK);
 			leaf = true;
 			return false;
 		}
