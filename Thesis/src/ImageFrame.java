@@ -322,7 +322,7 @@ public class ImageFrame extends JFrame {
 		//g2d.dispose();
 		double LowestMSE = 1000000000;
 		
-		int sum_sq = 0;
+		double sum_sq = 0;
 		double mse;
 		
 		Graphics2D g2d = (Graphics2D) image.getGraphics();
@@ -334,29 +334,66 @@ public class ImageFrame extends JFrame {
 		int width = refImg.getWidth();
 		int height = refImg.getHeight();
 		
-		for (int outerX = 0;outerX < input.getWidth();outerX += width){
+		for (int outerX = 0;outerX < (input.getWidth() - width);outerX += 1){//width){
 			//System.out.print("outer x: " + outerX);
-			for (int outerY = 0;outerY < input.getHeight();outerY += height){
+			for (int outerY = 0;outerY < (input.getHeight() - height);outerY += 1){//height){
 				//System.out.print(" outer y: " + outerY);
-				for (int i = 0; i < height; i++)
+				
+				
+				
+				for (int i = 0; i < height && i + outerY < input.getHeight(); i++)
 				{	
 					//System.out.print(" inner y: " + i);
-				    for (int j = 0; j < width; j++)
+				    for (int j = 0; j < width && j + outerX < input.getWidth(); j++)
 				    {
-				    	//System.out.print(" inner x: " + j);
+				    	
+				    	//System.out.println(" inner x: " + j);
 				        int p1 = refImg.getRGB(j, i);
+				        
 				        int p2 = input.getRGB(outerX + j, outerY + i);
+				        
+				        int r1 = (p1 >> 16) & 0xff;
+				        int g1 = (p1 >> 8) & 0xff;
+				        int b1 = (p1 >> 0) & 0xff;
+				        int r2 = (p2 >> 16) & 0xff;
+				        int g2 = (p2 >> 8) & 0xff;
+				        int b2 = (p2 >> 0) & 0xff;
+				        
+				        
 				        int err = p2 - p1;
-				        sum_sq += (err * err);
+				        int rerr = r2 - r1;
+				        int gerr = g2 - g1;
+				        int berr = b2 - b1;
+				        if (rerr < 0){rerr *= -1;};
+				        if (gerr < 0){gerr *= -1;};
+				        if (berr < 0){berr *= -1;};
+				        //sum_sq += (err * err);
+				        
+				        double sq = ((rerr + gerr + berr)/3.0);
+				        
+				        
+				        
+				        //System.out.println(sq);
+				        sum_sq += (sq);
 				    }
 				}
-				mse = (double)sum_sq / (input.getHeight() * input.getWidth());
-				
-				if (mse < 0){
-					mse *= -1;
+				sum_sq /= (width * height);
+				if (sum_sq < 10 && sum_sq > -10){
+					//LowestMSE = mse;
+					int imageUpperLeftY = outerY;//input.getHeight() - outerY;
+					g2d.drawRect(outerX, imageUpperLeftY, width, height);
+					System.out.println(outerX + " , " + outerY + "/" + imageUpperLeftY + " " + sum_sq);
+					//return new boolBuff(false,scaledImg);
 				}
 				
-				if (mse < 50){
+				
+				mse = (double)sum_sq / (width * height);
+				sum_sq = 0;
+				//if (mse < 0){
+				//	mse *= -1;
+				//}
+				
+				if (false){//mse < 0.01  && mse > -0.01 ){
 					LowestMSE = mse;
 					int imageUpperLeftY = input.getHeight() - outerY;
 					g2d.drawRect(outerX, imageUpperLeftY, width, height);
