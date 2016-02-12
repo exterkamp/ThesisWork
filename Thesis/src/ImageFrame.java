@@ -2,10 +2,12 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -334,9 +336,11 @@ public class ImageFrame extends JFrame {
 		int width = refImg.getWidth();
 		int height = refImg.getHeight();
 		
-		for (int outerX = 0;outerX < (input.getWidth() - width);outerX += 1){//width){
+		ArrayList<Point2D> points = new ArrayList<Point2D>();
+		
+		for (int outerX = 0;outerX < (input.getWidth() - width);outerX += 2){//width){
 			//System.out.print("outer x: " + outerX);
-			for (int outerY = 0;outerY < (input.getHeight() - height);outerY += 1){//height){
+			for (int outerY = 0;outerY < (input.getHeight() - height);outerY += 2){//height){
 				//System.out.print(" outer y: " + outerY);
 				
 				
@@ -378,11 +382,18 @@ public class ImageFrame extends JFrame {
 				    }
 				}
 				sum_sq /= (width * height);
-				if (sum_sq < 10 && sum_sq > -10){
+				if (sum_sq < 15 && sum_sq > -15){
 					//LowestMSE = mse;
 					int imageUpperLeftY = outerY;//input.getHeight() - outerY;
-					g2d.drawRect(outerX, imageUpperLeftY, width, height);
+					//g2d.drawRect(outerX, imageUpperLeftY, width, height);
+					//g2d.drawImage(refImg, outerX, imageUpperLeftY,null);
+					//g2d.drawImage(refImg, outerX, imageUpperLeftY,outerX + width, imageUpperLeftY + height,
+							//0,0,width,height,null);
 					System.out.println(outerX + " , " + outerY + "/" + imageUpperLeftY + " " + sum_sq);
+					
+					points.add(new Point2D.Double(outerX,imageUpperLeftY));
+					
+					
 					//return new boolBuff(false,scaledImg);
 				}
 				
@@ -393,14 +404,18 @@ public class ImageFrame extends JFrame {
 				//	mse *= -1;
 				//}
 				
-				if (false){//mse < 0.01  && mse > -0.01 ){
+				/*if (false){//mse < 0.01  && mse > -0.01 ){
 					LowestMSE = mse;
 					int imageUpperLeftY = input.getHeight() - outerY;
 					g2d.drawRect(outerX, imageUpperLeftY, width, height);
 					System.out.println(outerX + " , " + outerY + "/" + imageUpperLeftY + " " + mse);
 					//return new boolBuff(false,scaledImg);
-				}
+				}*/
 			}
+		}
+		
+		for (Point2D point : points){
+			g2d.drawImage(refImg,(int)point.getX(),(int)point.getY(),null);
 		}
 		
 		return image;
