@@ -2,7 +2,9 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.File;
@@ -186,6 +188,31 @@ public class ImageFrame extends JFrame {
 		
 		imageMenu.add(MSEItem);
 		
+		JMenuItem Item90 = new JMenuItem("90 rotate");
+		
+		Item90.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				if (image != null){
+					AffineTransform tx = new AffineTransform();
+					tx.translate(image.getHeight() * 0.5,image.getWidth() * 0.5);
+					tx.rotate((Math.PI * 1.0) / 2.0);
+					// first - center image at the origin so rotate works OK
+					tx.translate(-image.getWidth() * 0.5,-image.getHeight() * 0.5);
+					AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
+					
+					BufferedImage newImage = new BufferedImage(image.getHeight(), image.getWidth(), image.getType());
+					newImage = op.filter(image, newImage);
+					image = newImage;
+					displayBufferedImage(newImage);
+				}
+				//System.out.println("click");
+				
+				
+			}		
+		});
+		
+		imageMenu.add(Item90);
+		
 		fileMenu.add(exitItem);		
 		JMenuBar menuBar = new JMenuBar();		
 		menuBar.add(fileMenu);	
@@ -336,86 +363,104 @@ public class ImageFrame extends JFrame {
 		int width = refImg.getWidth();
 		int height = refImg.getHeight();
 		
-		ArrayList<Point2D> points = new ArrayList<Point2D>();
+		ArrayList<AffineStorage> points = new ArrayList<AffineStorage>();
 		
 		for (int outerX = 0;outerX < (input.getWidth() - width);outerX += 2){//width){
 			//System.out.print("outer x: " + outerX);
 			for (int outerY = 0;outerY < (input.getHeight() - height);outerY += 2){//height){
 				//System.out.print(" outer y: " + outerY);
+				AffineTransform tx = new AffineTransform();
+				for (int angle = 0; angle < 4; angle++){
+					tx.translate(height * 0.5,width * 0.5);
+					tx.rotate((Math.PI * angle) / 2);
+					// first - center image at the origin so rotate works OK
+					tx.translate(-width * 0.5,-height * 0.5);
+					AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
+					
+					BufferedImage newImage = new BufferedImage(height, width, refImg.getType());
+					op.filter(refImg, newImage);
+					
+					for (int i = 0; i < height && i + outerY < input.getHeight(); i++)
+					{	
+						//System.out.print(" inner y: " + i);
+					    for (int j = 0; j < width && j + outerX < input.getWidth(); j++)
+					    {
+					    	
+					    	//System.out.println(" inner x: " + j);
+					        int p1 = newImage.getRGB(j, i);
+					        
+					        int p2 = input.getRGB(outerX + j, outerY + i);
+					        
+					        int r1 = (p1 >> 16) & 0xff;
+					        int g1 = (p1 >> 8) & 0xff;
+					        int b1 = (p1 >> 0) & 0xff;
+					        int r2 = (p2 >> 16) & 0xff;
+					        int g2 = (p2 >> 8) & 0xff;
+					        int b2 = (p2 >> 0) & 0xff;
+					        
+					        
+					        int err = p2 - p1;
+					        int rerr = r2 - r1;
+					        int gerr = g2 - g1;
+					        int berr = b2 - b1;
+					        if (rerr < 0){rerr *= -1;};
+					        if (gerr < 0){gerr *= -1;};
+					        if (berr < 0){berr *= -1;};
+					        //sum_sq += (err * err);
+					        
+					        double sq = ((rerr + gerr + berr)/3.0);
+					        
+					        
+					        
+					        //System.out.println(sq);
+					        sum_sq += (sq);
+					    }
+					}
+					
+					sum_sq /= (width * height);
+					if (sum_sq < 15 && sum_sq > -15){
+						//LowestMSE = mse;
+						int imageUpperLeftY = outerY;//input.getHeight() - outerY;
+						//g2d.drawRect(outerX, imageUpperLeftY, width, height);
+						//g2d.drawImage(refImg, outerX, imageUpperLeftY,null);
+						//g2d.drawImage(refImg, outerX, imageUpperLeftY,outerX + width, imageUpperLeftY + height,
+								//0,0,width,height,null);
+						System.out.println(outerX + " , " + outerY + "/" + imageUpperLeftY + " " + sum_sq);
+						
+						//points.add(new Point2D.Double(outerX,imageUpperLeftY));
+						
+						
+						points.add(new AffineStorage(new Point2D.Double(outerX,imageUpperLeftY),new AffineTransform(tx),1));
+						
+						//return new boolBuff(false,scaledImg);
+					}
+					
+					
+					mse = (double)sum_sq / (width * height);
+					sum_sq = 0;
+					//if (mse < 0){
+					//	mse *= -1;
+					//}
+					
+					/*if (false){//mse < 0.01  && mse > -0.01 ){
+						LowestMSE = mse;
+						int imageUpperLeftY = input.getHeight() - outerY;
+						g2d.drawRect(outerX, imageUpperLeftY, width, height);
+						System.out.println(outerX + " , " + outerY + "/" + imageUpperLeftY + " " + mse);
+						//return new boolBuff(false,scaledImg);
+					}*/
 				
-				
-				
-				for (int i = 0; i < height && i + outerY < input.getHeight(); i++)
-				{	
-					//System.out.print(" inner y: " + i);
-				    for (int j = 0; j < width && j + outerX < input.getWidth(); j++)
-				    {
-				    	
-				    	//System.out.println(" inner x: " + j);
-				        int p1 = refImg.getRGB(j, i);
-				        
-				        int p2 = input.getRGB(outerX + j, outerY + i);
-				        
-				        int r1 = (p1 >> 16) & 0xff;
-				        int g1 = (p1 >> 8) & 0xff;
-				        int b1 = (p1 >> 0) & 0xff;
-				        int r2 = (p2 >> 16) & 0xff;
-				        int g2 = (p2 >> 8) & 0xff;
-				        int b2 = (p2 >> 0) & 0xff;
-				        
-				        
-				        int err = p2 - p1;
-				        int rerr = r2 - r1;
-				        int gerr = g2 - g1;
-				        int berr = b2 - b1;
-				        if (rerr < 0){rerr *= -1;};
-				        if (gerr < 0){gerr *= -1;};
-				        if (berr < 0){berr *= -1;};
-				        //sum_sq += (err * err);
-				        
-				        double sq = ((rerr + gerr + berr)/3.0);
-				        
-				        
-				        
-				        //System.out.println(sq);
-				        sum_sq += (sq);
-				    }
 				}
-				sum_sq /= (width * height);
-				if (sum_sq < 15 && sum_sq > -15){
-					//LowestMSE = mse;
-					int imageUpperLeftY = outerY;//input.getHeight() - outerY;
-					//g2d.drawRect(outerX, imageUpperLeftY, width, height);
-					//g2d.drawImage(refImg, outerX, imageUpperLeftY,null);
-					//g2d.drawImage(refImg, outerX, imageUpperLeftY,outerX + width, imageUpperLeftY + height,
-							//0,0,width,height,null);
-					System.out.println(outerX + " , " + outerY + "/" + imageUpperLeftY + " " + sum_sq);
-					
-					points.add(new Point2D.Double(outerX,imageUpperLeftY));
-					
-					
-					//return new boolBuff(false,scaledImg);
-				}
 				
-				
-				mse = (double)sum_sq / (width * height);
-				sum_sq = 0;
-				//if (mse < 0){
-				//	mse *= -1;
-				//}
-				
-				/*if (false){//mse < 0.01  && mse > -0.01 ){
-					LowestMSE = mse;
-					int imageUpperLeftY = input.getHeight() - outerY;
-					g2d.drawRect(outerX, imageUpperLeftY, width, height);
-					System.out.println(outerX + " , " + outerY + "/" + imageUpperLeftY + " " + mse);
-					//return new boolBuff(false,scaledImg);
-				}*/
 			}
 		}
 		
-		for (Point2D point : points){
-			g2d.drawImage(refImg,(int)point.getX(),(int)point.getY(),null);
+		for (AffineStorage point : points){
+			BufferedImage newImage = new BufferedImage(height, width, refImg.getType());
+			AffineTransformOp op = new AffineTransformOp(point.getTransform(), AffineTransformOp.TYPE_BILINEAR);
+			op.filter(refImg, newImage);
+			g2d.drawImage(newImage,(int)point.getPoint().getX(),(int)point.getPoint().getY(),null);
+			//g2d.drawRect(outerX, imageUpperLeftY, width, height);
 		}
 		
 		return image;
